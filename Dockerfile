@@ -207,6 +207,9 @@ COPY --from=jetpack-6 dist/lib/ollama/ /lib/ollama/
 FROM scratch AS rocm
 COPY --from=rocm-7 dist/lib/ollama /lib/ollama
 
+FROM scratch AS cuda13-amd64
+COPY --from=cuda-13 dist/lib/ollama /lib/ollama
+
 FROM ${FLAVOR} AS archive
 COPY --from=cpu dist/lib/ollama /lib/ollama
 COPY --from=build /bin/ollama /bin/ollama
