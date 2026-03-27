@@ -209,6 +209,7 @@ COPY --from=rocm-7 dist/lib/ollama /lib/ollama
 
 FROM scratch AS cuda13-amd64
 COPY --from=cuda-13 dist/lib/ollama /lib/ollama
+COPY --from=mlx /go/src/github.com/ollama/ollama/dist/lib/ollama /lib/ollama
 
 FROM ${FLAVOR} AS archive
 COPY --from=cpu dist/lib/ollama /lib/ollama
