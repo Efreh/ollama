@@ -144,6 +144,9 @@ RUN --mount=type=cache,target=/root/.ccache \
 
 FROM base AS mlx
 ARG CUDA13VERSION=13.0
+ARG MLX_CUDA_ARCHS=90\;90a
+ARG MLX_CUDA_THREADS=1
+ARG MLX_BUILD_JOBS=1
 RUN dnf install -y cuda-toolkit-${CUDA13VERSION//./-} \
     && dnf install -y openblas-devel lapack-devel \
     && dnf install -y libcudnn9-cuda-13 libcudnn9-devel-cuda-13 \
@@ -170,8 +173,8 @@ RUN --mount=type=cache,target=/root/.ccache \
     && if [ -f /tmp/local-mlx-c/CMakeLists.txt ]; then \
         export OLLAMA_MLX_C_SOURCE=/tmp/local-mlx-c; \
     fi \
-    && cmake --preset 'MLX CUDA 13' -DBLAS_INCLUDE_DIRS=/usr/include/openblas -DLAPACK_INCLUDE_DIRS=/usr/include/openblas \
-        && cmake --build --preset 'MLX CUDA 13' -- -l $(nproc) \
+    && cmake --preset 'MLX CUDA 13' -DBLAS_INCLUDE_DIRS=/usr/include/openblas -DLAPACK_INCLUDE_DIRS=/usr/include/openblas "-DMLX_CUDA_ARCHITECTURES=${MLX_CUDA_ARCHS}" "-DCMAKE_CUDA_FLAGS=--threads=${MLX_CUDA_THREADS}" \
+        && cmake --build --preset 'MLX CUDA 13' -- -j ${MLX_BUILD_JOBS} -l ${MLX_BUILD_JOBS} \
         && cmake --install build --component MLX --strip
 
 FROM base AS build
@@ -217,7 +220,7 @@ COPY --from=build /bin/ollama /bin/ollama
 
 FROM ubuntu:24.04
 RUN apt-get update \
-    && apt-get install -y ca-certificates libvulkan1 libopenblas0 \
+    && apt-get install -y ca-certificates libvulkan1 libopenblas0 libgfortran5 libquadmath0 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=archive /bin /usr/bin
