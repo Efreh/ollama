@@ -144,7 +144,6 @@ RUN --mount=type=cache,target=/root/.ccache \
 
 FROM base AS mlx
 ARG CUDA13VERSION=13.0
-ARG MLX_CUDA_ARCHS=90\;90a
 ARG MLX_CUDA_THREADS=1
 ARG MLX_BUILD_JOBS=1
 RUN dnf install -y cuda-toolkit-${CUDA13VERSION//./-} \
@@ -173,7 +172,7 @@ RUN --mount=type=cache,target=/root/.ccache \
     && if [ -f /tmp/local-mlx-c/CMakeLists.txt ]; then \
         export OLLAMA_MLX_C_SOURCE=/tmp/local-mlx-c; \
     fi \
-    && cmake --preset 'MLX CUDA 13' -DBLAS_INCLUDE_DIRS=/usr/include/openblas -DLAPACK_INCLUDE_DIRS=/usr/include/openblas "-DMLX_CUDA_ARCHITECTURES=${MLX_CUDA_ARCHS}" "-DCMAKE_CUDA_FLAGS=--threads=${MLX_CUDA_THREADS}" \
+    && cmake --preset 'MLX CUDA 13' -DBLAS_INCLUDE_DIRS=/usr/include/openblas -DLAPACK_INCLUDE_DIRS=/usr/include/openblas "-DCMAKE_CUDA_FLAGS=--threads=${MLX_CUDA_THREADS}" \
         && cmake --build --preset 'MLX CUDA 13' -- -j ${MLX_BUILD_JOBS} -l ${MLX_BUILD_JOBS} \
         && cmake --install build --component MLX --strip
 
@@ -212,7 +211,6 @@ COPY --from=rocm-7 dist/lib/ollama /lib/ollama
 
 FROM scratch AS cuda13-amd64
 COPY --from=cuda-13 dist/lib/ollama /lib/ollama
-COPY --from=mlx /go/src/github.com/ollama/ollama/dist/lib/ollama /lib/ollama
 
 FROM ${FLAVOR} AS archive
 COPY --from=cpu dist/lib/ollama /lib/ollama
